@@ -1,0 +1,152 @@
+#!/bin/bash
+#
+# This will submit all your changes in a separate PR for each file.
+#
+# Warning:
+# --------
+# This is in an alpha version. Make a backup of your changes and use only if you
+# have a decent experience with git
+
+PREFIX=""                           # prefix tag to use for commit and PR message
+BRANCH_PREFIX=""                    # prefix tag to use for branch name
+GIT_MESSAGE=""                      # prefix tag to use for the commit message
+SIMULATE=1                          # only show which files would be submitted
+STEP_BY_STEP=1                      # only submit one PR per run
+UPSTREAM_BRANCH="master"            # upstream branch
+HUB_PROGRAM="hub"                   # tool to submit pull request
+USE_BASENAME=0                      # how to calc the path for the auto-branch
+
+# for debugging:
+#set -uexo
+
+echo "Warning. This tool is in alpha-phase and should be used with great care".
+err="/dev/null"
+
+# parse all options
+while [[ $# -gt 0 ]]
+do
+key="$1"
+
+case $key in
+    -p|--prefix)
+        PREFIX="$2"
+        shift
+    ;;
+    -b|--branchprefix)
+        BRANCH_PREFIX="$2"
+        shift
+    ;;
+    -m|--message)
+        GIT_MESSAGE="$2"
+        shift
+    ;;
+    --basename)
+        USE_BASENAME=1
+    ;;
+    -f|--force)
+        SIMULATE=0
+        echo "Warning: you are now ending the simulation and working with real files."
+    ;;
+    -a|--all)
+        STEP_BY_STEP=0
+    ;;
+    *)
+        echo "$key is unknown"
+        exit 1
+    ;;
+esac
+shift # past argument or value
+done
+
+# unstages everything, so we can start from scratch
+git reset master 2> $err > $err
+
+files=$(git status --porcelain | cut -c4- )
+
+if [ -z "$files" ] ; then
+    echo "No changes."
+    exit 1
+fi
+
+# we might have some directories in here
+files=$(echo "${files}" | tr ' ' '\n' | xargs -I {} find {} -type f)
+
+# using the CLI tool hub is the most convenient option, otherwise we will show a URL
+hubInstalled=0
+if hash $HUB_PROGRAM 2>/dev/null 1>&2 ; then
+    # gets your github username, might not work on every platform
+    gitUser=$(git remote -v | grep origin | grep fetch | head -1 | sed -E 's!^.*github.com:?/?(.*)/.*!\1!')
+    hubInstalled=1
+fi
+
+# auto-detect upstream
+if [ $hubInstalled -eq 0 ] ; then
+    if git remote -v | grep -q 'upstream' ; then
+        UPSTREAM_REPO=$(git remote -v | grep '^upstream' | head -n1 | perl -lne 's/github.com:?\/?(.*)\/(.*?)([.]git| )// or next; print $1,"/",$2')
+        echo "Detected upstream repo is: ${UPSTREAM_REPO} (please use 'hub' or report an issue if this is not correct)"
+    fi
+fi
+
+for filename in $files ; do
+    # there are some issues with using path as git branches, better replace them
+    # for visual beauty we strip of the filename too
+    if [ $USE_BASENAME -eq 1 ] ; then
+        shortFileName=$(basename "$filename" | sed 's!/!_!g' | sed 's/[.].*$//')
+    else
+        shortFileName=$(echo "$filename" | sed 's!/!_!g' | sed 's/[.].*$//')
+    fi
+    branchName=${BRANCH_PREFIX}${shortFileName}
+    if [ -n "$GIT_MESSAGE" ] ; then
+        commitMessage=$(printf "%s %s %s" "${PREFIX}" "${GIT_MESSAGE}" "${shortFileName}")
+    else
+        commitMessage="${PREFIX} ${shortFileName}"
+    fi
+
+    echo "Adding file: ${filename} (branch: $branchName, msg:\"${commitMessage}\")"
+    if [ $SIMULATE -eq 1 ] ; then
+        continue
+    fi
+
+    git checkout master 2> $err > $err
+    # defensive removal of existing branches, it won't remove unmerged branches!
+    gb -d "$branchName" 2> /dev/null || true
+    git checkout -b "$branchName"
+
+    if [ "$(git rev-parse --abbrev-ref HEAD)" == "master" ] ; then
+        echo "Something went wrong when creating a new branch. Does the branch already exit?"
+        exit 1
+    fi
+
+    git add "$filename"
+
+    # commit & submit
+    git commit -m "$commitMessage"
+    git push --set-upstream origin "$branchName"
+
+    if [ $hubInstalled -eq 1 ] ; then
+        $HUB_PROGRAM pull-request -m "$commitMessage"
+    else
+        if [ -z "$UPSTREAM_REPO" ] ; then
+            # this should be cross-platform, but it's not tested
+            xdg-open "https://github.com/$UPSTREAM_REPO/compare/$UPSTREAM_BRANCH...$gitUser:$branchName"
+        fi
+    fi
+
+    if [ $STEP_BY_STEP -eq 1 ] ; then
+        echo "step-by-step executing is activated. use -a/--all to run for all remaining."
+        break
+    fi
+done
+
+git checkout master 2> $err > $err
+
+if [ -z "$UPSTREAM_REPO" ] && [ $hubInstalled -eq 0 ] ; then
+    echo ""
+    echo "Warning: neither hub is installed nor an upstream remote endpoint is set"
+    echo "Please consider installing hub or setting a remote endpoint (git remote add origin git@github.com:<repoSlug>.git)"
+fi
+
+if [ $SIMULATE -eq 1 ] ; then
+    echo ""
+    echo "Simulation was run. Now use -f/--force to apply."
+fi

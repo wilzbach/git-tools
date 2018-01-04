@@ -1,0 +1,25 @@
+#!/bin/bash
+# Merges upstream/stable into upstream/master
+# Execute from any git repository or pass the directory as first argument
+
+set -ueo pipefail -o xtrace
+trap "echo 'Fix the merge conflicts and submit the pull request with prsend.'" ERR
+
+DIR=${1:-$(pwd)}
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+pushd "$DIR"
+
+UPSTREAM="upstream"
+MASTER="master"
+STABLE="stable"
+
+git fetch --multiple origin "$UPSTREAM"
+git checkout "$MASTER"
+git merge --ff-only "$UPSTREAM/$MASTER"
+git branch -D "merge_$STABLE"
+git checkout -b "merge_$STABLE"
+git merge "$UPSTREAM/$STABLE"
+# <- Solve merge conflicts (if any occurred)
+"${SCRIPT_DIR}/pr_send"
+git checkout master
+popd

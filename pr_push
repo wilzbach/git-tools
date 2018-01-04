@@ -1,0 +1,26 @@
+#!/bin/bash
+# Force-push to a remote PR
+# Execute from any git repository or pass the directory as first argument
+
+set -ueo pipefail
+
+DIR=${1:-$(pwd)}
+pushd "$DIR" > /dev/null
+
+repoSlug=$(git remote -v | grep '^upstream' | head -n1 | perl -lne 's/github.com:?\/?(.*)\/(.*?)([.]git| )// or next; print $1,"/",$2')
+prNumber=$(git rev-parse --abbrev-ref HEAD | cut -d/ -f 2)
+
+echo "Recognized pr: $prNumber"
+echo "Recognized base slug: $repoSlug"
+
+# Detect headRef and headSlug via GitHub API
+githubReq=$(curl -s "https://api.github.com/repos/${repoSlug}/pulls/${prNumber}")
+headRef=$(echo "$githubReq" | jq -r '.head.ref')
+headSlug=$(echo "$githubReq" | jq -r '.head.repo.full_name')
+echo "Recognized head ref: $headRef"
+echo "Recognized head slug: $headSlug"
+
+# Send the update to the PR
+git push --force "git@github.com:${headSlug}" "HEAD:${headRef}"
+
+popd > /dev/null
