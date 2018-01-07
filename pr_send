@@ -3,29 +3,32 @@
 # Execute from any git repository or pass the directory as first argument
 set -ueo pipefail
 
-DIR=${1:-$(pwd)}
+DIR="$(pwd)"
+UPSTREAM_BRANCH="${1:-master}"
 HUB_BIN=${HUB:-hub}
 EDITOR=${EDITOR:-vim}
+UPSTREAM_REPO=$(git remote -v | grep '^upstream' | head -n1 | perl -lne 's/github.com:?\/?(.*)\/(.*?)([.]git| )// or next; print $1,"/",$2')
+UPSTREAM_ORIGIN=$(git remote -v | grep '^origin' | head -n1 | perl -lne 's/github.com:?\/?(.*)\/(.*?)([.]git| )// or next; print $1,"/",$2')
+UPSTREAM_REPO=${UPSTREAM_REPO:-$UPSTREAM_ORIGIN}
 pushd "$DIR" > /dev/null
 
 branch=$(git rev-parse --abbrev-ref HEAD)
 echo "-- Pushing ${branch} to GitHub"
 git push --set-upstream origin "${branch}"
 
-echo "-- Opening PR"
-if command -v "$HUB_BIN" 2> /dev/null ; then
+if command -v "$HUB_BIN" > /dev/null ; then
     tmpfile=$(mktemp)
     trap '{ rm -f $tmpfile; }' EXIT
     git log -1 --pretty=%B > "$tmpfile"
     "${EDITOR}" "$tmpfile"
-    prLink=$("$HUB_BIN" pull-request -F - < "$tmpfile")
+    base="${UPSTREAM_REPO/#/-b}"
+    base="${base/%/:$UPSTREAM_BRANCH}"
+    prLink=$("$HUB_BIN" pull-request "$base" -F - < "$tmpfile")
 else
-    UPSTREAM_REPO=$(git remote -v | grep '^upstream' | head -n1 | perl -lne 's/github.com:?\/?(.*)\/(.*?)([.]git| )// or next; print $1,"/",$2')
-    UPSTREAM_BRANCH="master"
     gitUser=$(git remote -v | grep origin | grep fetch | head -1 | sed -E 's!^.*github.com:?/?(.*)/.*!\1!')
     prLink="https://github.com/$UPSTREAM_REPO/compare/$UPSTREAM_BRANCH...$gitUser:$branch"
 fi
 
 echo "$prLink"
 xdg-open "$prLink"
-popd
+popd > /dev/null
