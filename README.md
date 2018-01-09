@@ -38,7 +38,7 @@ git remote add upstream git@github.com:dlang/phobos.git
 Clone any PR
 ------------
 
-# Checkout a single PR
+### Checkout a single PR
 
 Set the `pr` alias once for your global `.gitconfig`:
 
