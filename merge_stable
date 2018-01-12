@@ -16,7 +16,10 @@ STABLE="stable"
 git fetch --multiple origin "$UPSTREAM"
 git checkout "$MASTER"
 git merge --ff-only "$UPSTREAM/$MASTER"
-git branch -D "merge_$STABLE"
+
+# just in case `merge_stable` already exists
+git branch -D "merge_$STABLE" || true
+
 git checkout -b "merge_$STABLE"
 git merge "$UPSTREAM/$STABLE"
 # <- Solve merge conflicts (if any occurred)
