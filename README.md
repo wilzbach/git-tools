@@ -5,6 +5,7 @@ Collection of useful scripts for interacting with GitHub
   (it will open a temporary editor instance for editing the PR description)
 - `pr_push` - push to any PR
 - `merge_stable` - merge `upstream/stable` into `upstream/master` and submit a PR
+- rebase onto stable
 - `pr_split` (alpha) - will automatically split a PR into multiple PRs and submit these (one PR for each file)
 
 How to use
@@ -98,6 +99,18 @@ pr_push
 ```
 
 __Warning__: This tool with force-push to the PR. Be careful. You have been warned.
+
+Merge any PR onto stable
+------------------------
+
+You can combine `pr_push` to rebase any PR to `upstream/stable`:
+
+```bash
+git fetch upstream
+git pr 6060
+git rebase --onto upstream/stable upstream/master
+pr_push
+```
 
 `merge_stable` - merge `upstream/stable` into `upstream/master`
 ---------------------------------------------------------------
