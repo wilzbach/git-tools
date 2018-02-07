@@ -23,6 +23,13 @@ And then put it in your path:
 export PATH="$(pwd)/git-tools:$PATH"
 ```
 
+Required dependencies
+---------------------
+
+- `bash`
+- `curl`
+- [`jq`](https://stedolan.github.io/jq/)
+
 Optional dependencies
 ---------------------
 
