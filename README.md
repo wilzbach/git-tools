@@ -6,6 +6,7 @@ Collection of useful scripts for interacting with GitHub
 - `pr_checkout` - checkout any PR from an `upstream` repository
 - `pr_push` - push to any PR
 - `merge_stable` - merge `upstream/stable` into `upstream/master` and submit a PR
+- rebase onto stable
 - `pr_split` (alpha) - will automatically split a PR into multiple PRs and submit these (one PR for each file)
 
 How to use
@@ -22,6 +23,13 @@ And then put it in your path:
 ```sh
 export PATH="$(pwd)/git-tools:$PATH"
 ```
+
+Required dependencies
+---------------------
+
+- `bash`
+- `curl`
+- [`jq`](https://stedolan.github.io/jq/)
 
 Optional dependencies
 ---------------------
@@ -93,6 +101,18 @@ pr_push
 ```
 
 __Warning__: This tool with force-push to the PR. Be careful. You have been warned.
+
+Merge any PR onto stable
+------------------------
+
+You can combine `pr_push` to rebase any PR to `upstream/stable`:
+
+```bash
+git fetch upstream
+git pr 6060
+git rebase --onto upstream/stable upstream/master
+pr_push
+```
 
 `merge_stable` - merge `upstream/stable` into `upstream/master`
 ---------------------------------------------------------------
