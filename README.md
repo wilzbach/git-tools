@@ -44,6 +44,17 @@ Set it e.g. by:
 git remote add upstream git@github.com:dlang/phobos.git
 ```
 
+Optional aliases
+----------------
+
+If you don't like typing long command names, how about adding convenient aliases?
+I use these two:
+
+```bash
+alias ghs="pr_send"
+alias gho="pr_checkout"
+```
+
 `pr_send` - submita PR from your current branch
 -----------------------------------------------
 
