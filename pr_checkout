@@ -4,6 +4,11 @@
 # use: pr_checkout 5040
 set -ueo pipefail
 
+if [ -z "${1+x}" ] ; then
+    echo "./pr_checkout <123>"
+    exit
+fi
+
 DIR="$(pwd)"
 PR="$1"
 
@@ -12,6 +17,6 @@ cd "$DIR"
 # delete existing branch
 git checkout master
 git fetch upstream
-git branch -D "pr/$PR" || true
+git branch -D "pr/$PR" || true 2> /dev/null
 git fetch upstream "refs/pull/$PR/head:pr/$PR"
 git checkout "pr/$PR"
