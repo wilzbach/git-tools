@@ -1,8 +1,9 @@
 Collection of useful scripts for interacting with GitHub
 ========================================================
 
-- `pr_send` - open a PR from your current branch
+- `pr_send` - submit a PR from your current branch
   (it will open a temporary editor instance for editing the PR description)
+- `pr_checkout` - checkout any PR from an `upstream` repository
 - `pr_push` - push to any PR
 - `merge_stable` - merge `upstream/stable` into `upstream/master` and submit a PR
 - `pr_split` (alpha) - will automatically split a PR into multiple PRs and submit these (one PR for each file)
@@ -35,24 +36,28 @@ Set it e.g. by:
 git remote add upstream git@github.com:dlang/phobos.git
 ```
 
-Clone any PR
-------------
+`pr_send` - submita PR from your current branch
+-----------------------------------------------
 
-### Checkout a single PR
-
-Set the `pr` alias once for your global `.gitconfig`:
-
-```shell
-git config --global alias.pr '!f() { git fetch -fu ${2:-$(git remote |grep ^upstream || echo origin)} refs/pull/$1/head:pr/$1 && git checkout pr/$1; }; f'
+```bash
+git checkout -b my-fancy-branch
+# do some work
+pr_send
 ```
 
-Now fetch and checkout a single PR:
+- it will open a temporary editor instance for editing the PR description
+- opens a new PR against `upstream/master` or `origin/master`
 
-```shell
-git pr 123
+`pr_checkout` - checkout a PR from upstream
+-------------------------------------------
+
+```bash
+pr_checkout 123
 ```
 
-### Fetch all PRs
+- this will checkout the PR #123 locally and switch to the branch `pr/123`
+
+Warning: it will automatically delete previous versions of `pr/123`. This can happen if you use `pr_push` and the author force-pushed again.
 
 Alternatively you can also add an additional `fetch = +refs/pull/*/head:refs/remotes/origin/pr/*`
 line in your `.git/config` file:
@@ -76,23 +81,13 @@ And switch to any PR:
 git checkout pr/123
 ```
 
-`pr_send` - open a PR from your current branch
-----------------------------------------------
-
-```bash
-git checkout -b my-fancy-branch
-# do some work
-pr_send
-```
-
-- it will open a temporary editor instance for editing the PR description
-- opens a new PR against `upstream/master` or `origin/master`
+Note: updating all PRs will lead to longer `git fetch upsteam` times, but has the advantage of having storing everything locally.
 
 `pr_push` - push to any PR
 --------------------------
 
 ```bash
-git pr 123
+pr_checkout 123
 # do some work
 pr_push
 ```

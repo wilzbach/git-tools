@@ -1,0 +1,17 @@
+#!/bin/bash
+# Checkout a PR to an upstream repo from the CLI
+# This will overwrite previous checkouts
+# use: pr_checkout 5040
+set -ueo pipefail
+
+DIR="$(pwd)"
+PR="$1"
+
+cd "$DIR"
+
+# delete existing branch
+git checkout master
+git fetch upstream
+git branch -D "pr/$PR" || true
+git fetch upstream "refs/pull/$PR/head:pr/$PR"
+git checkout "pr/$PR"
