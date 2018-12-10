@@ -7,7 +7,9 @@ set -ueo pipefail
 DIR=${1:-$(pwd)}
 pushd "$DIR" > /dev/null
 
-repoSlug=$(git remote -v | grep '^upstream' | head -n1 | perl -lne 's/github.com:?\/?(.*)\/(.*?)([.]git| )// or next; print $1,"/",$2')
+UPSTREAM="${UPSTREAM:-upstream}"
+
+repoSlug=$(git remote -v | grep "^$UPSTREAM" | head -n1 | perl -lne 's/github.com:?\/?(.*)\/(.*?)([.]git| )// or next; print $1,"/",$2')
 prNumber=$(git rev-parse --abbrev-ref HEAD | cut -d/ -f 2)
 
 echo "Recognized pr: $prNumber"

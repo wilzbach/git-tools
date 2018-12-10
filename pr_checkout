@@ -11,12 +11,14 @@ fi
 
 DIR="$(pwd)"
 PR="$1"
+UPSTREAM="${UPSTREAM:-upstream}"
+MASTER="${MASTER:-master}"
 
 cd "$DIR"
 
 # delete existing branch
-git checkout master
-git fetch upstream
+git checkout "$MASTER"
+git fetch "$UPSTREAM"
 git branch -D "pr/$PR" || true 2> /dev/null
-git fetch upstream "refs/pull/$PR/head:pr/$PR"
+git fetch "$UPSTREAM" "refs/pull/$PR/head:pr/$PR"
 git checkout "pr/$PR"
