@@ -9,11 +9,12 @@ DIR=${1:-$(pwd)}
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 pushd "$DIR"
 
-UPSTREAM="upstream"
-MASTER="master"
-STABLE="stable"
+ORIGIN="${ORIGIN:-origin}"
+UPSTREAM="${UPSTREAM:-upstream}"
+MASTER="${MASTER:-master}"
+STABLE="${STABLE:-stable}"
 
-git fetch --multiple origin "$UPSTREAM"
+git fetch --multiple "$ORIGIN" "$UPSTREAM"
 git checkout "$MASTER"
 git merge --ff-only "$UPSTREAM/$MASTER"
 
@@ -24,5 +25,5 @@ git checkout -b "merge_$STABLE"
 git merge "$UPSTREAM/$STABLE"
 # <- Solve merge conflicts (if any occurred)
 "${SCRIPT_DIR}/pr_send"
-git checkout master
+git checkout "$MASTER"
 popd

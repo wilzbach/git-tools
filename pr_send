@@ -4,17 +4,19 @@
 set -ueo pipefail
 
 DIR="$(pwd)"
+ORIGIN="${ORIGIN:-origin}"
+UPSTREAM="${UPSTREAM:-upstream}"
 UPSTREAM_BRANCH="${1:-master}"
 HUB_BIN=${HUB:-hub}
 EDITOR=${EDITOR:-vim}
-UPSTREAM_REPO=$(git remote -v | grep '^upstream' | head -n1 | perl -lne 's/github.com:?\/?(.*)\/(.*?)([.]git| )// or next; print $1,"/",$2')
-UPSTREAM_ORIGIN=$(git remote -v | grep '^origin' | head -n1 | perl -lne 's/github.com:?\/?(.*)\/(.*?)([.]git| )// or next; print $1,"/",$2')
+UPSTREAM_REPO=$(git remote -v | grep "^$UPSTREAM" | head -n1 | perl -lne 's/github.com:?\/?(.*)\/(.*?)([.]git| )// or next; print $1,"/",$2')
+UPSTREAM_ORIGIN=$(git remote -v | grep "^$ORIGIN" | head -n1 | perl -lne 's/github.com:?\/?(.*)\/(.*?)([.]git| )// or next; print $1,"/",$2')
 UPSTREAM_REPO=${UPSTREAM_REPO:-$UPSTREAM_ORIGIN}
 pushd "$DIR" > /dev/null
 
 branch=$(git rev-parse --abbrev-ref HEAD)
 echo "-- Pushing ${branch} to GitHub"
-git push --set-upstream origin "${branch}"
+git push --set-upstream "$ORIGIN" "${branch}"
 
 if command -v "$HUB_BIN" > /dev/null ; then
     tmpfile=$(mktemp)
@@ -25,7 +27,7 @@ if command -v "$HUB_BIN" > /dev/null ; then
     base="${base/%/:$UPSTREAM_BRANCH}"
     prLink=$("$HUB_BIN" pull-request "$base" -F - < "$tmpfile")
 else
-    gitUser=$(git remote -v | grep origin | grep fetch | head -1 | sed -E 's!^.*github.com:?/?(.*)/.*!\1!')
+    gitUser=$(git remote -v | grep "$ORIGIN" | grep fetch | head -1 | sed -E 's!^.*github.com:?/?(.*)/.*!\1!')
     prLink="https://github.com/$UPSTREAM_REPO/compare/$UPSTREAM_BRANCH...$gitUser:$branch"
 fi
 
