@@ -5,7 +5,7 @@
 set -ueo pipefail
 
 if [ -z "${1+x}" ] ; then
-    echo "./pr_checkout <123>"
+    echo "Usage: ./pr_checkout <123>"
     exit
 fi
 
