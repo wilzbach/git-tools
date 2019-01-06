@@ -1,7 +1,16 @@
 #!/bin/bash
 # Checkout a PR to an upstream repo from the CLI
 # This will overwrite previous checkouts
-# use: pr_checkout 5040
+#
+# Examples:
+#
+# * (default, dir is pwd) checkout PR #5040, assuming that we're in a repo whose remote
+#   $UPSTREAM points to a GitHub repo that has a pull requst #5040 opened:
+# $ pr_checkout 5040
+#
+# * (explicit dir setting) checkout PR #5040 in /tmp/code/dmd (existing repo):
+# $ env DIR=/tmp/code/dmd pr_checkout 5040
+
 set -ueo pipefail
 
 if [ -z "${1+x}" ] ; then
