@@ -18,7 +18,5 @@ cd "$DIR"
 
 # delete existing branch
 git checkout -q "$MASTER"
-git fetch --prune "$UPSTREAM"
-git branch -D "pr/$PR" 2>/dev/null || true
-git fetch "$UPSTREAM" "refs/pull/$PR/head:pr/$PR"
+git fetch --prune "$UPSTREAM" "+refs/pull/$PR/head:pr/$PR"
 git checkout "pr/$PR"
