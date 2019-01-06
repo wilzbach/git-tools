@@ -9,7 +9,7 @@ if [ -z "${1+x}" ] ; then
     exit
 fi
 
-DIR="$(pwd)"
+DIR=$(test -d ${DIR:-.} && cd ${DIR:-.} || true && pwd)
 PR="$1"
 UPSTREAM="${UPSTREAM:-upstream}"
 MASTER="${MASTER:-master}"
