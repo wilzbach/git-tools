@@ -17,7 +17,7 @@ MASTER="${MASTER:-master}"
 cd "$DIR"
 
 # delete existing branch
-git checkout "$MASTER"
+git checkout -q "$MASTER"
 git fetch "$UPSTREAM"
 git branch -D "pr/$PR" || true 2> /dev/null
 git fetch "$UPSTREAM" "refs/pull/$PR/head:pr/$PR"
