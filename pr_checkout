@@ -18,5 +18,6 @@ cd "$DIR"
 
 # delete existing branch
 git checkout -q "$MASTER"
-git fetch --prune "$UPSTREAM" "+refs/pull/$PR/head:pr/$PR"
+git fetch --prune "$UPSTREAM" "$MASTER" "+refs/pull/$PR/head:pr/$PR"
+git merge --ff-only "$UPSTREAM/$MASTER"
 git checkout "pr/$PR"
