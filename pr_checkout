@@ -10,11 +10,29 @@
 #
 # * (explicit dir setting) checkout PR #5040 in /tmp/code/dmd (existing repo):
 # $ env DIR=/tmp/code/dmd pr_checkout 5040
+#
+# * (checkout URL) if the current dir is repo, checkout PR #1234. Otherwise clone
+#   the repo and then checkout the PR:
+# $ pr_checkout https://github.com/dlang/dmd/pull/1234
+#
+# * Supports copy-pasting various valid links to a pull-requests:
+# $ pr_checkout http://www.github.com/dlang/dmd/pull/1234
+# $ pr_checkout https://github.com/dlang/dmd/pull/1234/commits
+# $ pr_checkout https://github.com/dlang/dmd/pull/1234/checks
+# $ pr_checkout https://github.com/dlang/dmd/pull/1234/files
+# $ pr_checkout https://github.com/dlang/dmd/pull/9195#issuecomment-451495487
+#
+# * And even droping the obvious part of the url:
+# $ pr_checkout dlang/dmd/pull/1234
+#
+# * Use the DIR and UPSTREAM env variables to override the working directory
+#   as well as the name of the "upstream" remote:
+# $ env DIR=./dmd UPSTREAM=origin pr_checkout dlang/dmd/pull/6789
 
 set -ueo pipefail
 
 if [ -z "${1+x}" ] ; then
-    echo "[!] Usage: ./pr_checkout <number>"
+    echo "[!] Usage: ./pr_checkout <number>|<https://github.com/<user>/<repo>/pull/<number>>"
     exit
 fi
 
@@ -63,6 +81,7 @@ echo "[>] Executing from '$DIR'."
 
 cd "$DIR"
 pr_num_regex='^([0-9]+)$'
+pr_url_regex='^(https?://(www\.)?github\.com/)?(.+)/(.+)/pull/([0-9]+)([/#].*)?$'
 input=$1
 if [[ $input =~ $pr_num_regex ]]; then
     PR="${BASH_REMATCH[1]}"
@@ -73,8 +92,27 @@ if [[ $input =~ $pr_num_regex ]]; then
 
     git_stash_if_needed $DIR
     echo "[>] Attempting to fetch PR #$PR from '$UPSTREAM' ($(git remote get-url $UPSTREAM))."
+
+elif [[ $input =~ $pr_url_regex ]]; then
+    user="${BASH_REMATCH[3]}"
+    repo="${BASH_REMATCH[4]}"
+    PR="${BASH_REMATCH[5]}"
+
+    echo "[>] Attempting to fetch PR #$PR from 'github.com/$user/$repo'."
+
+    if ! is_git_repo $DIR $user $repo "$UPSTREAM"; then
+        echo "[!] Dir '$DIR' is not a valid git clone of '$user/$repo'."
+        if ! prompt "[?] Clone to '$DIR/$repo' [Y/n]? "; then
+            echo "[!] Clone aborted. Good bye."; exit 1
+        fi
+        git clone --depth 1 "https://github.com/$user/$repo" "$DIR/$repo"
+        cd "$DIR/$repo"
+        git remote rename origin $UPSTREAM 2>/dev/null || true
+    else
+        git_stash_if_needed $DIR
+    fi
 else
-    echo "[!] '$input' is not a valid number."
+    echo "[!] '$input' is neither a valid number, nor a valid URL to a GitHub pull request."
     exit 1
 fi
 
