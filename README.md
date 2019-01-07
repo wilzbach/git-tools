@@ -6,7 +6,6 @@ Collection of useful scripts for interacting with GitHub
 - `pr_checkout` - checkout any PR from an `upstream` repository
 - `pr_push` - push to any PR
 - `merge_stable` - merge `upstream/stable` into `upstream/master` and submit a PR
-- rebase onto stable
 - `pr_split` (alpha) - will automatically split a PR into multiple PRs and submit these (one PR for each file)
 
 How to use
@@ -38,7 +37,7 @@ Optional dependencies
 - `upstream` remote endpoint
 
 Most of these scripts need an `upstream` endpoint to work correctly.
-Set it e.g. by:
+For example, you can set it by executing this in your git directory:
 
 ```
 git remote add upstream git@github.com:dlang/phobos.git
@@ -55,8 +54,8 @@ alias ghs="pr_send"
 alias gho="pr_checkout"
 ```
 
-`pr_send` - submita PR from your current branch
------------------------------------------------
+`pr_send` - submit a PR from your current branch
+------------------------------------------------
 
 ```bash
 git checkout -b my-fancy-branch
@@ -67,40 +66,45 @@ pr_send
 - it will open a temporary editor instance for editing the PR description
 - opens a new PR against `upstream/master` or `origin/master`
 
-`pr_checkout` - checkout a PR from upstream
--------------------------------------------
+`pr_checkout` - checkout a PR locally
+-------------------------------------
 
 ```bash
 pr_checkout 123
+[>] Executing from '/home/zlx/code/repos/wilzbach/git-tools'.
+[>] Attempting to fetch PR #123 from 'github.com/wilzbach/git-tools'.
+From https://github.com/wilzbach/git-tools
+ * branch            master     -> FETCH_HEAD
+[>] Fast-forwarding 'master' branch... Already up to date.
+Switched to branch 'pr/123'
 ```
 
-- this will checkout the PR #123 locally and switch to the branch `pr/123`
+This will checkout the PR #123 locally and switch to the branch `pr/123`
+
+You can also checkout any arbitrary GitHub PR URL
+
+```bash
+pr_checkout https://github.com/wilzbach/git-tools/pull/2
+[>] Executing from '/home/zlx/code/repos/wilzbach/git-tools'.
+[>] Attempting to fetch PR #2 from 'github.com/wilzbach/git-tools'.
+From https://github.com/wilzbach/git-tools
+ * branch            master     -> FETCH_HEAD
+[>] Fast-forwarding 'master' branch... Already up to date.
+Switched to branch 'pr/2'
+```
+
+If the current directory doesn't contain this repository, `git-tools` will create it for you.
+You can specify the directory to be used for checkouts with `DIR`:
+
+```bash
+DIR=/opt/git-repos pr_checkout wilzbach/git-tools/pull/2
+[>] Executing from '/opt/git-repos'.
+[>] Attempting to fetch PR #2 from 'github.com/wilzbach/git-tools'.
+[!] Dir '/opt/git-repos/git-tools' is not a valid git clone of 'wilzbach/git-tools'.
+[?] Clone to '/opt/git-repos/git-tools' [Y/n]?
+```
 
 Warning: it will automatically delete previous versions of `pr/123`. This can happen if you use `pr_push` and the author force-pushed again.
-
-Alternatively you can also add an additional `fetch = +refs/pull/*/head:refs/remotes/origin/pr/*`
-line in your `.git/config` file:
-
-```shell
-[remote "upstream"]
-	url = git@github.com:dlang/phobos.git
-	fetch = +refs/heads/*:refs/remotes/origin/*
-	fetch = +refs/pull/*/head:refs/remotes/origin/pr/*
-```
-
-Now fetch `upstream` as usual:
-
-```shell
-git fetch upstream
-```
-
-And switch to any PR:
-
-```
-git checkout pr/123
-```
-
-Note: updating all PRs will lead to longer `git fetch upsteam` times, but has the advantage of having storing everything locally.
 
 `pr_push` - push to any PR
 --------------------------
@@ -113,8 +117,7 @@ pr_push
 
 __Warning__: This tool with force-push to the PR. Be careful. You have been warned.
 
-Merge any PR onto stable
-------------------------
+### Example: rebase a PR onto the stable branch
 
 You can combine `pr_push` to rebase any PR to `upstream/stable`:
 
@@ -128,11 +131,14 @@ pr_push
 `merge_stable` - merge `upstream/stable` into `upstream/master`
 ---------------------------------------------------------------
 
-- execute within the current git repo or pass the git repository as first argument
+`merge_stable` will merge the `upstream/stable` branch back into `upstream/master` and open a PR with this merge.
+Execute within the current git repo or pass the git repository as first argument
 
 ```bash
 merge_stable
 ```
+
+[Example](https://github.com/dlang/dmd/pull/9216).
 
 `pr_split`: Submitting step-by-step
 -----------------------------------
@@ -263,10 +269,39 @@ After one or two PRs, you can use `--all` to submit all remaining files.
 
 [See the result](https://github.com/dlang/dlang.org/pulls?utf8=%E2%9C%93&q=%5Brun-spec%5D).
 
+Other useful bits
+-----------------
+
+### Fetching all PRsat once
+
+You can also add an additional `fetch = +refs/pull/*/head:refs/remotes/origin/pr/*`
+line in your `.git/config` file:
+
+```shell
+[remote "upstream"]
+	url = git@github.com:dlang/phobos.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+	fetch = +refs/pull/*/head:refs/remotes/origin/pr/*
+```
+
+Now fetch `upstream` as usual:
+
+```shell
+git fetch upstream
+```
+
+And switch to any PR:
+
+```
+git checkout pr/123
+```
+
+Note: updating all PRs will lead to longer `git fetch upsteam` times, but has the advantage of having stored everything locally.
+
 Help
 ----
 
-Let me know if you run into [issues](https://github.com/wilzbach/splitup-prs/issues).
+Let me know if you run into [issues](https://github.com/wilzbach/git-tools/issues).
 
 License
 -------
