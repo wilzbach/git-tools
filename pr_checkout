@@ -105,7 +105,7 @@ elif [[ $input =~ $pr_url_regex ]]; then
         if ! prompt "[?] Clone to '$DIR/$repo' [Y/n]? "; then
             echo "[!] Clone aborted. Good bye."; exit 1
         fi
-        git clone --depth 1 "https://github.com/$user/$repo" "$DIR/$repo"
+        git clone "https://github.com/$user/$repo" "$DIR/$repo"
         cd "$DIR/$repo"
         git remote rename origin $UPSTREAM 2>/dev/null || true
     else
