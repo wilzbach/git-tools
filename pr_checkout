@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Checkout a PR to an upstream repo from the CLI
 # This will overwrite previous checkouts
 #
