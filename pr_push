@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Force-push to a remote PR
 # Execute from any git repository or pass the directory as first argument
 
